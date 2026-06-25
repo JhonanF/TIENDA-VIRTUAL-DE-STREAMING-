@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Catch-all Default-Deny Security Gate
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Global Helpers (The 8 Pillars of Fortress Rules)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Role-Based Access: Check if user exists in the 'admins' collection
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Validation helper for Store Config
+    function isValidStoreConfig(data) {
+      return data.storeName is string && data.storeName.size() <= 100 &&
+             data.tagline is string && data.tagline.size() <= 200 &&
+             data.whatsappNumber is string && data.whatsappNumber.size() <= 30 &&
+             data.neonColor is string && (data.neonColor == 'cyan' || data.neonColor == 'blue' || data.neonColor == 'purple' || data.neonColor == 'emerald' || data.neonColor == 'indigo') &&
+             (!data.keys().contains('aboutText') || data.aboutText is string) &&
+             (!data.keys().contains('instagramUrl') || data.instagramUrl is string) &&
+             (!data.keys().contains('linkedinUrl') || data.linkedinUrl is string) &&
+             (!data.keys().contains('tiktokUrl') || data.tiktokUrl is string);
+    }
+
+    // Validation helper for Products
+    function isValidProduct(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 150 &&
+             data.price is string && data.price.size() <= 50 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.category is string && data.category.size() <= 100 &&
+             (!data.keys().contains('imageUrl') || data.imageUrl is string) &&
+             (!data.keys().contains('whatsappMessage') || data.whatsappMessage is string) &&
+             (!data.keys().contains('views') || data.views is int);
+    }
+
+    // Validation helper for Services
+    function isValidService(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 150 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.features is list && data.features.size() <= 40 &&
+             data.iconName is string && data.iconName.size() <= 50 &&
+             (!data.keys().contains('whatsappMessage') || data.whatsappMessage is string);
+    }
+
+    // Validation helper for Contact Messages
+    function isValidMessage(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 155 &&
+             data.message is string && data.message.size() <= 2500 &&
+             (!data.keys().contains('topic') || data.topic is string) &&
+             data.createdAt is timestamp;
+    }
+
+    // --- COLLECTION RULE GROUPS ---
+
+    // 1. Store Config Document Rule
+    match /configs/{configId} {
+      allow read, write: if true;
+    }
+
+    // 2. Products Collection Rules
+    match /products/{productId} {
+      allow read, write: if true;
+    }
+
+    // 3. Services Collection Rules
+    match /services/{serviceId} {
+      allow read, write: if true;
+    }
+
+    // 4. Contact/Lead Messages Rules
+    match /messages/{messageId} {
+      allow read, write: if true;
+    }
+
+    // 5. Admins list
+    match /admins/{userId} {
+      allow read, write: if true;
+    }
+  }
+}

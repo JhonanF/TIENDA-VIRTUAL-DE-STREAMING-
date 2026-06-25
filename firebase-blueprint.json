@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "StoreConfig": {
+      "title": "StoreConfig",
+      "description": "Configuración global de la tienda futurista.",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string", "description": "Nombre de la marca o tienda" },
+        "tagline": { "type": "string", "description": "Línea de presentación o slogan" },
+        "whatsappNumber": { "type": "string", "description": "Número de WhatsApp para contacto directo" },
+        "neonColor": { "type": "string", "enum": ["cyan", "blue", "purple", "emerald", "indigo"], "description": "Color de acento neón de la web" },
+        "aboutText": { "type": "string", "description": "Breve descripción de la tienda" },
+        "instagramUrl": { "type": "string" },
+        "linkedinUrl": { "type": "string" },
+        "tiktokUrl": { "type": "string" }
+      },
+      "required": ["storeName", "tagline", "whatsappNumber", "neonColor"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Producto digital o licencia premium en venta.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "whatsappMessage": { "type": "string" },
+        "views": { "type": "integer", "description": "Cantidad de visitas que ha recibido el producto" }
+      },
+      "required": ["id", "name", "price", "description", "category"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Servicio profesional ofertado por la agencia.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "features": { "type": "array" },
+        "iconName": { "type": "string" },
+        "whatsappMessage": { "type": "string" }
+      },
+      "required": ["id", "name", "description", "features", "iconName"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Consultas o contactos enviados por clientes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "topic": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/configs/store": {
+      "schema": "StoreConfig",
+      "description": "Documento único para la configuración de la tienda"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Colección de productos disponibles"
+    },
+    "/services/{serviceId}": {
+      "schema": "Service",
+      "description": "Colección de servicios disponibles"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Lista de consultas de contacto"
+    }
+  }
+}

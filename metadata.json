@@ -1,0 +1,6 @@
+{
+  "name": "Tienda MB DIGITAL",
+  "description": "Tienda digital moderna, futurista y profesional de servicios de automatización con IA, edición de video y diseño con integración directa a WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

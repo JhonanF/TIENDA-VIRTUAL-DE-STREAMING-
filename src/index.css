@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Orbitron", "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    background-color: #050506;
+    color: #ffffff;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    /* Momentum scrolling en iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Custom scrollbar (solo escritorio) */
+  @media (min-width: 768px) {
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050506;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  /* Scrollbar invisible en móvil para pantalla más limpia */
+  @media (max-width: 767px) {
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      scrollbar-width: none;
+    }
+  }
+}
+
+/* Custom grid patterns and premium gradients */
+.cyber-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(128, 128, 128, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.07) 1px, transparent 1px);
+}
+
+.cyber-grid-radial {
+  background: radial-gradient(circle 800px at 50% 200px, rgba(5, 5, 6, 0.3), #050506);
+}
+
+.glow-overlay {
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+/* Smooth motion card borders */
+.interactive-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Cyberpunk 3D Perspective Grid and Laser Scan styles */
+.perspective-grid-container {
+  perspective: 450px;
+  perspective-origin: 50% 0%;
+}
+
+.perspective-grid {
+  background-size: 60px 60px;
+  background-image: 
+    linear-gradient(to right, var(--grid-color, rgba(6, 182, 212, 0.08)) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color, rgba(6, 182, 212, 0.08)) 1px, transparent 1px);
+  transform: rotateX(75deg);
+  transform-origin: top center;
+  animation: grid-travel 16s linear infinite;
+}
+
+@keyframes grid-travel {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 960px;
+  }
+}
+
+.laser-scan-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--scan-color, rgba(6, 182, 212, 0.2)) 50%,
+    var(--scan-color-bright, rgba(6, 182, 212, 0.8)) 50%,
+    var(--scan-color, rgba(6, 182, 212, 0.2)) 51%,
+    transparent
+  );
+  animation: laser-scan-anim 6s ease-in-out infinite;
+}
+
+@keyframes laser-scan-anim {
+  0% {
+    top: -10%;
+  }
+  50% {
+    top: 110%;
+  }
+  100% {
+    top: -10%;
+  }
+}
+
+/* Glassmorphism card premium tweaks */
+.cyber-glass-card {
+  background: rgba(255, 255, 255, 0.015);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 4px 30px rgba(0, 0, 0, 0.4);
+  /* GPU compositing layer para scroll fluido */
+  will-change: transform;
+  contain: layout style;
+}
+
+.cyber-glass-card:hover {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: var(--card-hover-border, rgba(6, 182, 212, 0.35));
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 10px 40px -10px var(--card-hover-glow, rgba(6, 182, 212, 0.25));
+}
+
+/* En móvil: desactivar backdrop-blur en cards para mejor FPS */
+@media (max-width: 767px) {
+  .cyber-glass-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(10, 10, 14, 0.85);
+    will-change: auto;
+  }
+}
+
+/* Cyberpunk Hero Text & Interactive Grid Effects */
+.cyber-outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.03);
+  letter-spacing: 0.04em;
+}
+
+.interactive-hero-grid {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, var(--grid-color, rgba(6, 182, 212, 0.05)) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color, rgba(6, 182, 212, 0.05)) 1px, transparent 1px);
+  will-change: transform;
+}
+
+/* Cyberpunk Liquid Aurora Orbs Anim keyframes */
+@keyframes aurora-float-1 {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(40px, -60px) rotate(120deg) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 40px) rotate(240deg) scale(0.95);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(360deg) scale(1);
+  }
+}
+
+@keyframes aurora-float-2 {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-50px, 50px) rotate(-180deg) scale(1.15);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(-360deg) scale(1);
+  }
+}
+
+@keyframes aurora-float-3 {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  40% {
+    transform: translate(60px, 30px) rotate(90deg) scale(0.9);
+  }
+  80% {
+    transform: translate(-20px, -40px) rotate(270deg) scale(1.1);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(360deg) scale(1);
+  }
+}
+
+.aurora-orb-1 {
+  animation: aurora-float-1 25s ease-in-out infinite;
+  will-change: transform;
+}
+
+.aurora-orb-2 {
+  animation: aurora-float-2 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+.aurora-orb-3 {
+  animation: aurora-float-3 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* En móvil: pausar auroras para ahorrar CPU/GPU */
+@media (max-width: 767px) {
+  .aurora-orb-1, .aurora-orb-2, .aurora-orb-3 {
+    animation-duration: 45s;
+    opacity: 0.4 !important;
+  }
+  .laser-scan-line {
+    display: none;
+  }
+  .perspective-grid-container {
+    display: none;
+  }
+}
+
+/* 3D Card rendering preserve */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Animaciones reducidas para usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-orb-1, .aurora-orb-2, .aurora-orb-3,
+  .laser-scan-line, .animate-float, .perspective-grid {
+    animation: none;
+  }
+}
+
+
+
+
