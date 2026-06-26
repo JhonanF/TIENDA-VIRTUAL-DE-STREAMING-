@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { DEFAULT_CONFIG, DEFAULT_PRODUCTS, DEFAULT_SERVICES } from './data/defaults';
 import { StoreConfig, Product, Service } from './types';
@@ -10,9 +10,11 @@ import FAQSection from './components/FAQSection';
 import WhatsAppButton from './components/WhatsAppButton';
 import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
-import AdminPanel from './components/AdminPanel';
 import ResellerBanner from './components/ResellerBanner';
 import CyberBackground from './components/CyberBackground';
+import LoadingSkeleton from './components/LoadingSkeleton';
+// Lazy-load: AdminPanel es ~99KB y nunca se necesita en la carga inicial
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
 import { db } from './firebase';
 import { doc, setDoc, onSnapshot, collection, updateDoc } from 'firebase/firestore';
 import { ShoppingCart, Plus, Minus, Trash2, X, Send } from 'lucide-react';
@@ -56,6 +58,16 @@ export default function App() {
 
   // Global Currency State
   const [currency, setCurrency] = useState<'PEN' | 'USD'>('PEN');
+
+  /**
+   * isHydrating: true solo en primera visita (sin localStorage).
+   * Con Firestore offline persistence, la segunda visita sirve datos desde IndexedDB
+   * y el skeleton no llega a verse. Solo afecta visitas 100% en frío.
+   */
+  const [isHydrating, setIsHydrating] = useState(() => {
+    const hasLocalCache = !!localStorage.getItem('nexus_store_config');
+    return !hasLocalCache;
+  });
 
   // Shopping Cart State
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>(() => {
@@ -190,15 +202,21 @@ export default function App() {
         } else {
           setConfig(data);
         }
+        // Primera respuesta de Firestore/IndexedDB recibida → ocultar skeleton
+        setIsHydrating(false);
       } else {
         try {
           await setDoc(configDocRef, DEFAULT_CONFIG);
         } catch (e) {
           console.warn("Config bootstrap error: ", e);
         }
+        // Sin documento existente — usa defaults locales y oculta skeleton
+        setIsHydrating(false);
       }
     }, (error) => {
       console.warn("Firestore config listener fallback to offline", error);
+      // En caso de error de red, mostrar defaults inmediatamente
+      setIsHydrating(false);
     });
 
     // 2. Products listener
@@ -396,7 +414,22 @@ export default function App() {
   };
 
   return (
-    <div id="main-site-wrapper" className="min-h-screen bg-transparent relative overflow-hidden text-gray-100 font-sans selection:bg-white/20 selection:text-white">
+    <>
+      {/* Skeleton de carga premium — solo en primera visita (sin caché local) */}
+      <AnimatePresence>
+        {isHydrating && (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            <LoadingSkeleton />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div id="main-site-wrapper" className="min-h-screen bg-transparent relative overflow-hidden text-gray-100 font-sans selection:bg-white/20 selection:text-white">
       {/* Global Interactive Futuristic Cyberpunk Background */}
       <CyberBackground config={config} />
 
@@ -574,7 +607,7 @@ export default function App() {
       {/* Modern Sci-Fi footer */}
       <Footer config={config} />
 
-      {/* Drawer customizer panel overlay */}
+      {/* Drawer customizer panel overlay - Lazy loaded para no inflar el bundle inicial */}
       <AnimatePresence>
         {isAdminOpen && (
           <>
@@ -583,17 +616,20 @@ export default function App() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               onClick={() => setIsAdminOpen(false)}
             />
-            <AdminPanel
-              config={config}
-              products={products}
-              services={services}
-              onClose={() => setIsAdminOpen(false)}
-              onSave={handleSaveStoreData}
-              onRestore={handleRestoreDefaults}
-            />
+            <Suspense fallback={<div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-neutral-950 z-50 flex items-center justify-center"><div className="text-gray-500 font-mono text-sm animate-pulse">Cargando panel...</div></div>}>
+              <AdminPanel
+                config={config}
+                products={products}
+                services={services}
+                onClose={() => setIsAdminOpen(false)}
+                onSave={handleSaveStoreData}
+                onRestore={handleRestoreDefaults}
+              />
+            </Suspense>
           </>
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }

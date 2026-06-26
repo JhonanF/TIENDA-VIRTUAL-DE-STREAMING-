@@ -19,6 +19,8 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
   const colorStuff = getNeonColorClasses(config.neonColor);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  // Detectar móvil una sola vez al montar (sin re-renders)
+  const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
   const [windowSize, setWindowSize] = useState({ width: 1200, height: 800 });
 
   // Sincronizar tamaño y redimensionamiento (con debounce básico para evitar recálculos excesivos)
@@ -41,9 +43,9 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
     };
   }, []);
 
-  // Rastrear posición global del cursor para la atracción del canvas
+  // Rastrear posición global del cursor (solo desktop — en móvil no hay cursor)
   useEffect(() => {
-    // Throttle cursor events
+    if (isMobileDevice) return; // Sin cursor en móvil: no registrar listeners
     let lastMove = 0;
     const handleMouseMove = (e: MouseEvent) => {
       const now = performance.now();
@@ -65,10 +67,11 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [isMobileDevice]);
 
-  // Animación del Canvas de Partículas
+  // Animación del Canvas de Partículas (solo desktop)
   useEffect(() => {
+    if (isMobileDevice) return; // Saltar canvas en móvil para liberar CPU durante LCP
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -77,10 +80,8 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
     let animationFrameId: number;
     const particles: Particle[] = [];
     
-    // Reduce particle count on mobile screens to drastically improve FPS
-    const isMobile = windowSize.width < 768;
-    const densityDivisor = isMobile ? 32000 : 22000;
-    const maxParticles = Math.min(isMobile ? 25 : 45, Math.floor((windowSize.width * windowSize.height) / densityDivisor));
+    const densityDivisor = 22000;
+    const maxParticles = Math.min(45, Math.floor((windowSize.width * windowSize.height) / densityDivisor));
 
     // Inicializar partículas
     for (let i = 0; i < maxParticles; i++) {
@@ -177,7 +178,7 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [windowSize, colorStuff.accentHex, config.neonColor]);
+  }, [windowSize, colorStuff.accentHex, config.neonColor, isMobileDevice]);
 
   // Convertir el color de neón dinámico a RGB para las auroras gaseosas
   const getAuroraColors = () => {
@@ -223,13 +224,15 @@ export default function CyberBackground({ config }: CyberBackgroundProps) {
         }}
       />
 
-      {/* 2. Interactive Neuronal Canvas Grid */}
-      <canvas 
-        ref={canvasRef}
-        width={windowSize.width}
-        height={windowSize.height}
-        className="absolute inset-0 pointer-events-none z-10 opacity-70"
-      />
+      {/* 2. Interactive Neuronal Canvas Grid (solo desktop para no saturar CPU en móvil) */}
+      {!isMobileDevice && (
+        <canvas 
+          ref={canvasRef}
+          width={windowSize.width}
+          height={windowSize.height}
+          className="absolute inset-0 pointer-events-none z-10 opacity-70"
+        />
+      )}
       
       {/* 3. Global Atmospheric Scanline Overlay */}
       <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-b from-transparent via-[#050506]/5 to-[#050506]/10 opacity-40" />

@@ -176,7 +176,7 @@ export default function Services({ services, config }: ServicesProps) {
   };
 
   return (
-    <section id="services-section" className="py-14 sm:py-28 relative overflow-hidden bg-transparent border-y border-neutral-900/40">
+    <section id="services-section" className="py-14 sm:py-28 relative overflow-hidden bg-transparent border-y border-neutral-900/40 cv-auto">
       
       {/* 3D perspective grid background layer */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 perspective-grid-container opacity-10">

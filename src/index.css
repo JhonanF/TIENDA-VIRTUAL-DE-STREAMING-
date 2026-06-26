@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Google Fonts ahora se carga en index.html via <link media="print"> para evitar render-blocking */
 @import "tailwindcss";
 
 @theme {
@@ -43,6 +43,35 @@
       scrollbar-width: none;
     }
   }
+}
+
+/* ============================================================
+   PERFORMANCE UTILITIES
+   - content-visibility: auto → skip layout/paint para secciones
+     que están fuera del viewport (importante para LCP en móvil).
+   - contain-intrinsic-size → evita layout shifts al aplicar
+     content-visibility (el navegador reserva el espacio).
+   ============================================================ */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px; /* Placeholder height estimate */
+}
+
+/* Font display swap como CSS fallback explícito */
+@font-face {
+  font-family: 'Orbitron';
+  font-display: swap;
+  src: local('Orbitron');
+}
+@font-face {
+  font-family: 'Inter';
+  font-display: swap;
+  src: local('Inter');
+}
+
+/* Optimización de imágenes lazy */
+img[loading="lazy"] {
+  content-visibility: auto;
 }
 
 /* Custom grid patterns and premium gradients */

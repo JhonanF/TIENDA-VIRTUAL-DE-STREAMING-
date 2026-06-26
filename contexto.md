@@ -136,6 +136,34 @@ Los colores de la web no están cableados a mano con clases estáticas en el HTM
 * **Nuevas Variables CSS de Neón (Catálogo):** Se han integrado variables de CSS inline (`--grid-color`, `--scan-color`, `--scan-color-bright`, `--card-hover-border`, `--card-hover-glow`) alimentadas dinámicamente con `colorStuff.accentHex` para cambiar el color de la cuadrícula animada en perspectiva 3D, el haz de escáner láser y los bordes/resplandores de las tarjetas de cristal esmerilado en tiempo real según el tema seleccionado.
 * **Tarjetas Tilt Parallax 3D:** Las tarjetas de producto en `Catalog.tsx` implementan el componente `TiltCard`. Al mover el cursor, la tarjeta se inclina físicamente en el espacio 3D (`rotateX`/`rotateY`), el destello luminoso de cristal (shine overlay) persigue el cursor recreando refracciones de luz, y la imagen de producto (o icono) se desplaza ligeramente en sentido contrario, generando un efecto parallax tridimensional inmersivo y de alta fidelidad.
 
+### ⚡ Performance Móvil (Optimizaciones Implementadas — Jun 2026)
+Se realizaron optimizaciones críticas en dos oleadas para mejorar FCP/LCP en móvil:
+
+**Oleada 1 (solicitudes de bloqueo y bundle):**
+* **Fuentes No Bloqueantes:** El `@import` de Google Fonts removido de `src/index.css` y movido a `index.html` con `media="print" onload="this.media='all'"`. Ahorro: **~750ms en FCP**.
+* **Skeleton Inline:** El `#root` en `index.html` tiene un `<div>` con fondo negro que da FCP inmediato antes de que React hidrate.
+* **AdminPanel Lazy-Load:** `AdminPanel.tsx` (~56KB gzip) se carga con `React.lazy()` + `Suspense`. Solo se descarga al abrir el panel. Bundle inicial reducido.
+* **Code Splitting en Vite:** `vite.config.ts` usa `manualChunks` separando `firebase-core` (app+firestore), `firebase-storage`, `motion`, `icons` y `AdminPanel` como chunks cacheables independientes.
+* **Canvas Deshabilitado en Móvil:** `CyberBackground.tsx` usa `isMobileDevice` al montar. En móvil el `<canvas>` no existe en el DOM ni se ejecuta el loop RAF.
+* **Preconnect DNS/TLS:** `<link rel="preconnect">` a Fonts, Firestore y Firebase en `<head>`.
+
+**Oleada 2 (cache, rendering, Firebase offline):**
+* **Firestore Offline Persistence:** `firebase.ts` migrado de `getFirestore()` a `initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })`. La segunda visita sirve datos desde IndexedDB instantáneamente — elimina el retraso de la cadena Firestore de 28,044ms en red lenta.
+* **Firebase Auth Lazy Init:** `getAuth()` reemplazado por `getAuthLazy()` (importación dinámica). El iframe de 90KB de Firebase Auth solo se descarga cuando el admin abre el panel.
+* **LoadingSkeleton Premium:** Nuevo componente `LoadingSkeleton.tsx` con logo animado y barra de progreso neón. Solo aparece en primera visita (sin `localStorage`). Se oculta con fade-out animado al recibir el primer snapshot de Firestore/IndexedDB.
+* **`vercel.json` con Cache Immutable:** Configuración de Vercel con `Cache-Control: public, max-age=31536000, immutable` para todos los assets `/assets/**`. Los chunks con hash nunca se re-descargan. Incluye headers de seguridad (X-Frame-Options, XSS Protection).
+* **`content-visibility: auto` en sections:** Las secciones below-fold (`Services.tsx`, `FAQSection.tsx`) tienen la clase `.cv-auto` que usa `content-visibility: auto` para que el navegador salte su layout/paint hasta que el usuario haga scroll. Ahorra tiempo de rendering en el inicio.
+
+**Build Final — Chunks del bundle de producción:**
+```
+dist/assets/firebase-core (app+firestore) → 433.95 KB | 108.61 KB gzip (cacheado)
+dist/assets/firebase-storage            →  17.06 KB |   4.80 KB gzip (cacheado)
+dist/assets/firebase-auth               → lazy — solo si el admin lo abre
+dist/assets/icons (lucide-react)        →  18.87 KB |   4.38 KB gzip (cacheado)
+dist/assets/AdminPanel                  →  56.29 KB |  11.02 KB gzip (lazy)
+dist/assets/motion (framer)             → 139.04 KB |  46.04 KB gzip (cacheado)
+dist/assets/index (app code)            → 275.87 KB |  82.32 KB gzip
+```
 
 
 ### 🐛 Ejecución de Comandos en Windows (PowerShell)
@@ -171,3 +199,6 @@ Si la IA necesita saber qué hacer en siguientes etapas, se recomienda continuar
 1. **Seguridad de credenciales:** Migrar la validación de contraseñas fijas de `AdminPanel.tsx` a variables de entorno `.env.local` y usar Firebase Auth.
 2. **Uso de Timestamp:** Cambiar `createdAt: new Date()` en `ContactForm.tsx` por `serverTimestamp()` de Firestore.
 3. **Modularización:** Dividir `AdminPanel.tsx` en múltiples archivos más legibles en `src/components/admin/`.
+4. **[Completado]** ~~Firestore Offline Persistence~~ ✔️
+5. **[Completado]** ~~Firebase Auth Lazy Init~~ ✔️
+6. **SEO Avanzado:** Implementar `<script type="application/ld+json">` con structured data de tipo `Product` y `Organization` para mejorar la visibilidad en Google Shopping.

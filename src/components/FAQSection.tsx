@@ -45,7 +45,7 @@ export default function FAQSection({ config }: FAQSectionProps) {
   };
 
   return (
-    <section id="faq-section" className="py-14 sm:py-20 relative overflow-hidden bg-transparent border-t border-neutral-900/40">
+    <section id="faq-section" className="py-14 sm:py-20 relative overflow-hidden bg-transparent border-t border-neutral-900/40 cv-auto">
       <div className="max-w-4xl mx-auto px-4 relative z-10">
         
         {/* Encabezado */}
