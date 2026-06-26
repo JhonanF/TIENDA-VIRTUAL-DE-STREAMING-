@@ -29,30 +29,41 @@ const getIconComponent = (iconName: string) => {
   }
 };
 
+import { useIsMobile } from '../hooks/useIsMobile';
+import { MotionValue } from 'motion/react';
+
 // 3D Parallax Tilt Card Component for Services
 interface TiltCardProps {
-  children: (props: { parallaxX: any; parallaxY: any }) => React.ReactNode;
+  children: (props: { parallaxX: number | MotionValue<number>; parallaxY: number | MotionValue<number> }) => React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
 }
 
-function TiltCard({ children, className, style }: TiltCardProps) {
+function StaticCard({ children, className, style }: TiltCardProps) {
+  return (
+    <div className={className} style={style}>
+      {children({ parallaxX: 0, parallaxY: 0 })}
+    </div>
+  );
+}
+
+function InteractiveTiltCard({ children, className, style }: TiltCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Motion values for physical 3D rotation
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const x = useMotionValue<number>(0);
+  const y = useMotionValue<number>(0);
   
   // Percentages for glass shine reflection (0% to 100%)
-  const shineX = useMotionValue(50);
-  const shineY = useMotionValue(50);
+  const shineX = useMotionValue<number>(50);
+  const shineY = useMotionValue<number>(50);
 
   // Parallax offset motion values for background layers
-  const parallaxX = useMotionValue(0);
-  const parallaxY = useMotionValue(0);
+  const parallaxX = useMotionValue<number>(0);
+  const parallaxY = useMotionValue<number>(0);
 
   // Scale motion value
-  const scale = useMotionValue(1);
+  const scale = useMotionValue<number>(1);
 
   // High performance spring physics
   const springX = useSpring(x, { stiffness: 100, damping: 16 });
@@ -125,12 +136,22 @@ function TiltCard({ children, className, style }: TiltCardProps) {
           background: `radial-gradient(circle 200px at var(--shine-x, 50%) var(--shine-y, 50%), rgba(255, 255, 255, 0.07), transparent 80%)`,
           '--shine-x': shineXPercent,
           '--shine-y': shineYPercent,
-        } as any}
+        } as React.CSSProperties}
       />
       {children({ parallaxX: springParallaxX, parallaxY: springParallaxY })}
     </motion.div>
   );
 }
+
+function TiltCard({ children, className, style }: TiltCardProps) {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return <StaticCard children={children} className={className} style={style} />;
+  }
+  return <InteractiveTiltCard children={children} className={className} style={style} />;
+}
+
 
 export default function Services({ services, config }: ServicesProps) {
   const colorStuff = getNeonColorClasses(config.neonColor);

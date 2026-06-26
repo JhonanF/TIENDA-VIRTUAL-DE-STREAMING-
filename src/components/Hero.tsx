@@ -9,16 +9,23 @@ interface HeroProps {
   config: StoreConfig;
 }
 
-// 1. Interactive Magnetic Button Component
-function MagneticButton({ 
-  children, 
-  className, 
-  onClick 
-}: { 
-  children: React.ReactNode; 
-  className: string; 
-  onClick?: () => void; 
-}) {
+import { useIsMobile } from '../hooks/useIsMobile';
+
+interface MagneticButtonProps {
+  children: React.ReactNode;
+  className: string;
+  onClick?: () => void;
+}
+
+function StaticButton({ children, className, onClick }: MagneticButtonProps) {
+  return (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
+}
+
+function InteractiveMagneticButton({ children, className, onClick }: MagneticButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   
   // High performance smooth physics for attraction
@@ -64,6 +71,17 @@ function MagneticButton({
     </motion.button>
   );
 }
+
+// 1. Interactive Magnetic Button Component (Wrapper)
+function MagneticButton({ children, className, onClick }: MagneticButtonProps) {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return <StaticButton children={children} className={className} onClick={onClick} />;
+  }
+  return <InteractiveMagneticButton children={children} className={className} onClick={onClick} />;
+}
+
 
 // 2. Main Hero Component
 export default function Hero({ config }: HeroProps) {
