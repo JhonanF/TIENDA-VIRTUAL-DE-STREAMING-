@@ -173,6 +173,11 @@ export default function App() {
 
   // Load and subscribe Firestore elements real-time
   useEffect(() => {
+    // Resolve hydration state after 450ms max to prevent holding the user hostage
+    const hydrationTimer = setTimeout(() => {
+      setIsHydrating(false);
+    }, 450);
+
     // 1. Config listener
     const configDocRef = doc(db, 'configs', 'store');
     const unsubConfig = onSnapshot(configDocRef, async (snapshot) => {
@@ -329,6 +334,7 @@ export default function App() {
     });
 
     return () => {
+      clearTimeout(hydrationTimer);
       unsubConfig();
       unsubProducts();
       unsubServices();

@@ -141,8 +141,8 @@ export default function Hero({ config }: HeroProps) {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.15
+        staggerChildren: 0.05,
+        delayChildren: 0.05
       }
     }
   };
@@ -150,17 +150,14 @@ export default function Hero({ config }: HeroProps) {
   const letterVariants = {
     hidden: { 
       opacity: 0, 
-      y: 35,
-      rotateX: 45
+      y: 15
     },
     visible: { 
       opacity: 1, 
       y: 0, 
-      rotateX: 0,
       transition: { 
-        type: 'spring', 
-        damping: 12, 
-        stiffness: 120 
+        duration: 0.35,
+        ease: [0.25, 1, 0.5, 1]
       } 
     }
   };
@@ -296,7 +293,7 @@ export default function Hero({ config }: HeroProps) {
           <motion.p 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
             className="font-sans text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto font-light leading-relaxed relative z-10"
           >
             {config.aboutText || "Automatizaciones con Inteligencia Artificial, edición cinematográfica y diseño futurista de interfaces para impulsar tu marca a velocidades de hiperespacio."}
@@ -306,7 +303,7 @@ export default function Hero({ config }: HeroProps) {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 pt-2 sm:pt-4 w-full sm:w-auto relative z-20"
           >
             <MagneticButton

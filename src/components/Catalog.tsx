@@ -4,17 +4,36 @@ import { ShoppingCart, Tag, ShieldCheck, Cpu, Star, Download, Sparkles, X, Searc
 import { Product, StoreConfig } from '../types';
 import { getNeonColorClasses, generateWhatsAppUrl, convertAndFormatPrice } from '../utils';
 
+const getOptimizedImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('unsplash.com')) {
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set('auto', 'format');
+      urlObj.searchParams.set('fit', 'crop');
+      urlObj.searchParams.set('w', '400');
+      urlObj.searchParams.set('q', '75');
+      urlObj.searchParams.set('fm', 'webp');
+      return urlObj.toString();
+    } catch (e) {
+      return url;
+    }
+  }
+  return url;
+};
+
 // Componente auxiliar para cargar imágenes de forma progresiva con esqueleto (shimmer) y difuminado suave
 interface ProductImageProps {
   src: string;
   alt: string;
   parallaxX: any;
   parallaxY: any;
+  loading?: 'eager' | 'lazy';
 }
 
-function ProductImage({ src, alt, parallaxX, parallaxY }: ProductImageProps) {
+function ProductImage({ src, alt, parallaxX, parallaxY, loading = 'lazy' }: ProductImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [hasError, setHasError] = useState(!src);
 
   return (
     <div className="absolute inset-0 w-full h-full bg-neutral-900/40 overflow-hidden">
@@ -32,16 +51,16 @@ function ProductImage({ src, alt, parallaxX, parallaxY }: ProductImageProps) {
         </div>
       ) : (
         <motion.img 
-          src={src} 
+          src={getOptimizedImageUrl(src)} 
           alt={alt} 
-          className={`absolute inset-0 w-full h-full object-cover scale-[1.08] transition-all duration-500 ease-out ${
+          className={`absolute inset-0 w-full h-full object-cover scale-[1.08] transition-all duration-300 ease-out ${
             isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'
           }`}
           style={{ x: parallaxX, y: parallaxY }}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
           referrerPolicy="no-referrer"
-          loading="lazy"
+          loading={loading}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-[#050506]/95 via-transparent to-black/10 z-10" />
@@ -190,8 +209,8 @@ const gridContainerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
+      staggerChildren: 0.04,
+      delayChildren: 0.05
     }
   }
 };
@@ -361,7 +380,7 @@ export default function Catalog({ products, config, currency, onAddToCart, cartI
           animate="show"
           className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8"
         >
-          {filteredProducts.map((product) => {
+          {filteredProducts.map((product, pIndex) => {
             const defaultMessage = `Hola, estoy interesado en adquirir el producto "${product.name}" de precio "${product.price}" en tu tienda. ¿Me podrías dar los pasos para activar mi licencia?`;
             const customMessage = product.whatsappMessage || defaultMessage;
             const buyUrl = generateWhatsAppUrl(config.whatsappNumber, customMessage);
@@ -392,6 +411,7 @@ export default function Catalog({ products, config, currency, onAddToCart, cartI
                           alt={product.name} 
                           parallaxX={parallaxX} 
                           parallaxY={parallaxY} 
+                          loading={pIndex < 2 ? 'eager' : 'lazy'}
                         />
                       ) : (
                         <>
