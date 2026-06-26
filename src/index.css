@@ -50,11 +50,15 @@
    - content-visibility: auto → skip layout/paint para secciones
      que están fuera del viewport (importante para LCP en móvil).
    - contain-intrinsic-size → evita layout shifts al aplicar
-     content-visibility (el navegador reserva el espacio).
+     content-visibility. Usar "auto <valor>" para que el browser
+     use el tamaño real cacheado tras la primera renderización
+     (previene CLS en visitas subsecuentes).
    ============================================================ */
 .cv-auto {
   content-visibility: auto;
-  contain-intrinsic-size: 0 500px; /* Placeholder height estimate */
+  /* FIX modern-web-guidance: "auto" keyword + estimación en unidades relativas.
+     El browser reutiliza el tamaño real tras la primera paint → sin CLS. */
+  contain-intrinsic-block-size: auto 500px;
 }
 
 /* Font display swap como CSS fallback explícito */
@@ -133,6 +137,8 @@ img[loading="lazy"] {
   }
 }
 
+/* FIX modern-web-guidance: Migrar de "top" (layout property, causa reflow) a
+   "translate" (compositor thread, sin layout). Mejora FPS y elimina jank. */
 .laser-scan-line {
   background: linear-gradient(
     to bottom,
@@ -142,19 +148,14 @@ img[loading="lazy"] {
     var(--scan-color, rgba(6, 182, 212, 0.2)) 51%,
     transparent
   );
+  top: 0;
   animation: laser-scan-anim 6s ease-in-out infinite;
 }
 
 @keyframes laser-scan-anim {
-  0% {
-    top: -10%;
-  }
-  50% {
-    top: 110%;
-  }
-  100% {
-    top: -10%;
-  }
+  0%   { translate: 0 -110%; }
+  50%  { translate: 0 210%; }
+  100% { translate: 0 -110%; }
 }
 
 /* Glassmorphism card premium tweaks */
@@ -166,9 +167,9 @@ img[loading="lazy"] {
   box-shadow: 
     inset 0 1px 1px rgba(255, 255, 255, 0.1),
     0 4px 30px rgba(0, 0, 0, 0.4);
-  /* GPU compositing layer para scroll fluido */
-  will-change: transform;
-  contain: layout style;
+  /* FIX modern-web-guidance: contain: paint agrega aislamiento de compositing.
+     will-change sólo en :hover — no de forma permanente (evita memory overhead). */
+  contain: layout style paint;
 }
 
 .cyber-glass-card:hover {
@@ -177,6 +178,8 @@ img[loading="lazy"] {
   box-shadow: 
     inset 0 1px 1px rgba(255, 255, 255, 0.15),
     0 10px 40px -10px var(--card-hover-glow, rgba(6, 182, 212, 0.25));
+  /* Solo elevar al compositor durante la interacción activa */
+  will-change: transform;
 }
 
 /* En móvil: desactivar backdrop-blur en cards para mejor FPS */
@@ -185,7 +188,6 @@ img[loading="lazy"] {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: rgba(10, 10, 14, 0.85);
-    will-change: auto;
   }
 }
 
@@ -248,22 +250,22 @@ img[loading="lazy"] {
   }
 }
 
+/* FIX modern-web-guidance: Eliminar will-change permanente de aurora orbs.
+   Solo se necesita durante la animación activa, no en el estado inicial.
+   El browser lo gestiona implícitamente cuando detecta transform animado. */
 .aurora-orb-1 {
   animation: aurora-float-1 25s ease-in-out infinite;
-  will-change: transform;
 }
 
 .aurora-orb-2 {
   animation: aurora-float-2 30s ease-in-out infinite;
-  will-change: transform;
 }
 
 .aurora-orb-3 {
   animation: aurora-float-3 22s ease-in-out infinite;
-  will-change: transform;
 }
 
-/* En móvil: pausar auroras para ahorrar CPU/GPU */
+/* En móvil: ralentizar auroras para ahorrar CPU/GPU */
 @media (max-width: 767px) {
   .aurora-orb-1, .aurora-orb-2, .aurora-orb-3 {
     animation-duration: 45s;
@@ -285,14 +287,29 @@ img[loading="lazy"] {
   backface-visibility: hidden;
 }
 
-/* Animaciones reducidas para usuarios que prefieren menos movimiento */
+/* ============================================================
+   FIX modern-web-guidance: prefers-reduced-motion
+   La guía prohíbe aplicar animation-duration: 0.01ms globalmente
+   o animation: none directamente (puede hacer algunas animaciones
+   más abruptas). Se usa una custom property --animation-reduced
+   para mantener versiones alternativas suaves junto a las originales.
+   ============================================================ */
+@property --animation-reduced {
+  syntax: "*";
+  inherits: false;
+  initial-value: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .aurora-orb-1, .aurora-orb-2, .aurora-orb-3,
-  .laser-scan-line, .animate-float, .perspective-grid {
-    animation: none;
+  * {
+    animation: var(--animation-reduced) !important;
   }
 }
 
-
-
-
+/* Versiones reducidas declaradas junto a cada animación */
+.aurora-orb-1 { --animation-reduced: aurora-float-1 60s ease-in-out infinite; }
+.aurora-orb-2 { --animation-reduced: aurora-float-2 80s ease-in-out infinite; }
+.aurora-orb-3 { --animation-reduced: aurora-float-3 55s ease-in-out infinite; }
+.animate-float { --animation-reduced: float 12s ease-in-out infinite; }
+.laser-scan-line { --animation-reduced: none; }
+.perspective-grid { --animation-reduced: none; }

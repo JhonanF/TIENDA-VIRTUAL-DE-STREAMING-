@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { motion, useSpring, useMotionValue } from 'motion/react';
 import { ArrowRight, ArrowDown } from 'lucide-react';
 import { StoreConfig } from '../types';
@@ -89,19 +89,35 @@ export default function Hero({ config }: HeroProps) {
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track mouse coordinates over the container for grid perspective distorsion
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const { clientX, clientY } = e;
-    const { width, height } = containerRef.current.getBoundingClientRect();
-    const x = (clientX / width - 0.5) * 35; // range: -17.5 to 17.5
-    const y = (clientY / height - 0.5) * 35;
-    setMouseOffset({ x, y });
-  };
+  // FIX modern-web-guidance (INP): Throttle con RAF para evitar setState
+  // en cada evento de mousemove (~200+ veces/seg). Con RAF se colapsan
+  // todas las actualizaciones al siguiente frame de pintura (60fps max).
+  const rafRef = useRef<number | null>(null);
 
-  const handleMouseLeave = () => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    if (rafRef.current !== null) return; // ya hay un frame pendiente
+
+    rafRef.current = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      const x = (clientX / width - 0.5) * 35; // range: -17.5 to 17.5
+      const y = (clientY / height - 0.5) * 35;
+      setMouseOffset({ x, y });
+      rafRef.current = null;
+    });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     setMouseOffset({ x: 0, y: 0 });
-  };
+  }, []);
 
   const scrollHandler = (id: string) => {
     const element = document.getElementById(id);

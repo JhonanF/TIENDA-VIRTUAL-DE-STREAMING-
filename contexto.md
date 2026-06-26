@@ -154,6 +154,12 @@ Se realizaron optimizaciones críticas en dos oleadas para mejorar FCP/LCP en m�
 * **`vercel.json` con Cache Immutable:** Configuración de Vercel con `Cache-Control: public, max-age=31536000, immutable` para todos los assets `/assets/**`. Los chunks con hash nunca se re-descargan. Incluye headers de seguridad (X-Frame-Options, XSS Protection).
 * **`content-visibility: auto` en sections:** Las secciones below-fold (`Services.tsx`, `FAQSection.tsx`) tienen la clase `.cv-auto` que usa `content-visibility: auto` para que el navegador salte su layout/paint hasta que el usuario haga scroll. Ahorra tiempo de rendering en el inicio.
 
+**Fase 3 (Optimización de Físicas y Resortes en Móvil — Jun 2026):**
+* **Hook Reactivo useIsMobile:** Se creó `src/hooks/useIsMobile.ts` para detectar en tiempo real si el usuario navega desde un dispositivo móvil.
+* **Bifurcación de Tarjetas y Botones:** Las tarjetas de producto (`Catalog.tsx`), de servicios (`Services.tsx`) y los botones interactivos del Hero (`Hero.tsx`) se dividieron en versiones estáticas (`StaticCard`, `StaticButton`) e interactivas 3D (`InteractiveTiltCard`, `InteractiveMagneticButton`). 
+* En dispositivos móviles se renderizan las versiones estáticas **planas**, omitiendo por completo los hooks `useSpring` y `useMotionValue` de Framer Motion. Esto libera a la CPU móvil de calcular físicas tridimensionales invisibles (sin cursor flotante), reduciendo a cero el bloqueo del hilo principal de JavaScript y optimizando la velocidad del sitio.
+
+
 **Build Final — Chunks del bundle de producción:**
 ```
 dist/assets/firebase-core (app+firestore) → 433.95 KB | 108.61 KB gzip (cacheado)

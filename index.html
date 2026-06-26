@@ -12,6 +12,18 @@
     <link rel="preconnect" href="https://firebaseapp.com" />
     <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
 
+    <!-- FIX modern-web-guidance: Preload de fuente crítica (Orbitron) usada en
+         el H1 candidato a LCP. fetchpriority="high" la pone al nivel de la imagen
+         LCP para que el texto se pinte en el primer frame disponible. -->
+    <link
+      rel="preload"
+      href="https://fonts.gstatic.com/s/orbitron/v31/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyGy6BoWgz.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      fetchpriority="high"
+    />
+
     <!-- Google Fonts: display=swap evita FOIT + carga fuera de ruta crítica -->
     <link
       rel="stylesheet"

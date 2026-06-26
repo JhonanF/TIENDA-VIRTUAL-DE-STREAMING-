@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useSpring, useMotionValue, useTransform } from 'motion/react';
 import { Cpu, Video, Layout, Wrench, Sparkles, Laptop, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Service, StoreConfig } from '../types';
@@ -32,8 +32,47 @@ const getIconComponent = (iconName: string) => {
 import { useIsMobile } from '../hooks/useIsMobile';
 import { MotionValue } from 'motion/react';
 
+// FIX modern-web-guidance (Rules of Hooks): useState NO puede usarse dentro de
+// .map(). Extraemos la lógica de expand/collapse a un componente propio para
+// cumplir con las reglas de Hooks y aislar el re-render por card.
+interface ServiceDescriptionProps {
+  description: string;
+  colorText: string;
+}
+
+function ServiceDescription({ description, colorText }: ServiceDescriptionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const maxLength = 120;
+  const shouldTruncate = description.length > maxLength;
+
+  return (
+    <div className="font-sans text-xs sm:text-sm text-gray-400 font-light leading-relaxed">
+      <p className="inline">
+        {shouldTruncate && !isExpanded
+          ? `${description.slice(0, maxLength)}...`
+          : description}
+      </p>
+      {shouldTruncate && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className={`ml-2 text-xs font-mono font-bold uppercase transition-colors duration-200 focus:outline-none hover:text-white ${colorText}`}
+        >
+          {isExpanded ? 'Leer menos' : 'Leer más'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+
 // 3D Parallax Tilt Card Component for Services
-interface TiltCardProps {
+// Extiende React.Attributes para que TypeScript reconozca la prop especial `key`
+// cuando el componente se usa dentro de Array.map() — ts(2322)
+interface TiltCardProps extends React.Attributes {
   children: (props: { parallaxX: number | MotionValue<number>; parallaxY: number | MotionValue<number> }) => React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -300,33 +339,10 @@ export default function Services({ services, config }: ServicesProps) {
                         </span>
                       </div>
 
-                      {(() => {
-                        const [isExpanded, setIsExpanded] = React.useState(false);
-                        const maxLength = 120;
-                        const shouldTruncate = service.description.length > maxLength;
-                        
-                        return (
-                          <div className="font-sans text-xs sm:text-sm text-gray-400 font-light leading-relaxed">
-                            <p className="inline">
-                              {shouldTruncate && !isExpanded 
-                                ? `${service.description.slice(0, maxLength)}...` 
-                                : service.description}
-                            </p>
-                            {shouldTruncate && (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setIsExpanded(!isExpanded);
-                                }}
-                                className={`ml-2 text-xs font-mono font-bold uppercase transition-colors duration-200 focus:outline-none hover:text-white ${colorStuff.text}`}
-                              >
-                                {isExpanded ? 'Leer menos' : 'Leer más'}
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })()}
+                      <ServiceDescription
+                        description={service.description}
+                        colorText={colorStuff.text}
+                      />
 
                       {/* Tech Divider */}
                       <div className="border-t border-neutral-900/40 w-full pt-2" />

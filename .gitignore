@@ -36,3 +36,5 @@ dist-ssr/
 
 # Agent/AI context
 .agentcontext
+.agents/
+skills-lock.json
